@@ -10,55 +10,46 @@
 // //////////////////////////////////////////////////////////////////////////
 // //////////////////////////////
 
-#if UNITY_EDITOR
+using System;
+using System.IO;
+using System.Linq;
 using UnityEngine;
-using UnityEditor;
-#endif
 
-public abstract class TrianglePrimitive {
-#if UNITY_EDITOR
-    private static Mesh CreateMesh() {
-        Vector3[] vertices = {
-            new Vector3(-0.5f, -0.5f, 0),
-            new Vector3(0.5f, -0.5f, 0),
-            new Vector3(0f, 0.5f, 0)
-        };
+public class TriangleSurface : MonoBehaviour
+{
+    [SerializeField] private TextAsset vertexFile;
+    [SerializeField] private TextAsset indexFile;
 
-        Vector2[] uv = {
-            new Vector2(0, 0),
-            new Vector2(1, 0),
-            new Vector2(0.5f, 1)
-        };
+    private Vector3[] ReadVertexData()
+    {
+        // defines which characters to split file into lines on:
+        var splitLines = new string[] { "\r\n", "\r", "\n" };
+        
+        // defines which characters to split each line on:
+        var splitLine = new char[] { '(', ')', ',' };
 
-        int[] triangles = { 0, 1, 2 };
+        // split file into array of non-empty lines:
+        string[] lines = vertexFile.text.Split(splitLines, System.StringSplitOptions.RemoveEmptyEntries);
 
-        var mesh = new Mesh();
-        mesh.vertices = vertices;
-        mesh.uv = uv;
-        mesh.triangles = triangles;
-        mesh.RecalculateBounds();
-        mesh.RecalculateNormals();
-        mesh.RecalculateTangents();
-        return mesh;
+        if (lines.Length < 1) return new Vector3[] {};
+        
+        var numVertices = int.Parse(lines[0]);
+        
+        if (numVertices < 1) return new Vector3[] {};
+
+        var vertices = new Vector3[] { };
+
+        foreach (var line in lines)
+        {
+            var elements = line.Split(splitLine, StringSplitOptions.RemoveEmptyEntries);
+            Debug.Log(elements);
+        }
+
+        return new Vector3[] { };
     }
-
-    private static GameObject CreateObject() {
-        var obj = new GameObject("Triangle");
-        var mesh = CreateMesh();
-        var filter = obj.AddComponent<MeshFilter>();
-        var renderer = obj.AddComponent<MeshRenderer>();
-        var collider = obj.AddComponent<MeshCollider>();
-
-        filter.sharedMesh = mesh;
-        collider.sharedMesh = mesh;
-        renderer.sharedMaterial = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
-
-        return obj;
+    
+    private void Awake()
+    {
+        if (vertexFile != null) ReadVertexData();
     }
-
-    [MenuItem("GameObject/3D Object/Triangle", false, 0)]
-    public static void Create() {
-        CreateObject();
-    }
-#endif
 }
