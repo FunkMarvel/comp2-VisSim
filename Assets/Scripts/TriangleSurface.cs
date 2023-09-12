@@ -39,7 +39,8 @@ public class TriangleSurface : MonoBehaviour
     public Vector3[] Vertices { get; private set; } // property with public getter and private setter.
     public List<TriangleData> Triangles { get; private set; } // property with public getter and private setter.
 
-    private void Awake()
+    [ContextMenu("Create Surface")]
+    private void CreateSurface()
     {
         if (vertexFile == null || indexFile == null)
         {
