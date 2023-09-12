@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using UnityEditor;
 using UnityEngine;
 
 public struct TriangleData
@@ -48,7 +49,9 @@ public class TriangleSurface : MonoBehaviour
         var meshRenderer = gameObject.AddComponent<MeshRenderer>();
 
         filter.sharedMesh = GenerateMesh();
-        if (material != null) meshRenderer.sharedMaterial = material;
+        
+        // use chosen material, or default material if nothing is chosen.
+        meshRenderer.sharedMaterial = material != null ? material : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
     }
 
     private void ReadVertexData()
