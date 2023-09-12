@@ -28,8 +28,10 @@ public struct TriangleData
     public int[] Neighbours { get; private set; }
 }
 
+// [ExecuteAlways]
 public class TriangleSurface : MonoBehaviour
 {
+    [SerializeField] private Vector3 offset;
     [SerializeField] private TextAsset vertexFile;
     [SerializeField] private TextAsset indexFile;
     [SerializeField] private Material material;
@@ -90,11 +92,18 @@ public class TriangleSurface : MonoBehaviour
                 continue;
             }
 
+            var position = transform.position;
+            
             vertices[i - 1] = new Vector3(
                 float.Parse(elements[0], CultureInfo.InvariantCulture),
                 float.Parse(elements[1], CultureInfo.InvariantCulture),
                 float.Parse(elements[2], CultureInfo.InvariantCulture)
             );
+        }
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            vertices[i] -= offset;
         }
 
         Vertices = vertices;
@@ -169,9 +178,12 @@ public class TriangleSurface : MonoBehaviour
             triangles = GenerateIndexArray()
         };
 
-        newMesh.RecalculateBounds();
+        // newMesh.RecalculateBounds();
         newMesh.RecalculateNormals();
         newMesh.RecalculateTangents();
+
+        // var bounds = newMesh.bounds;
+        // transform.position -= bounds.center;
 
         return newMesh;
     }
