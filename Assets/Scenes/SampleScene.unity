@@ -302,8 +302,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0.3595679, y: 0.0042025074, z: -0.0016021221, w: 0.9331081}
+  m_LocalPosition: {x: 30.578093, y: 63.52079, z: -36.60185}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -317,6 +317,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 4004232407944700832, guid: 1ecd8dd4ba63f0148a13b583d7124014, type: 3}
+      propertyPath: material
+      value: 
+      objectReference: {fileID: 2100000, guid: 9a389361491898e4a99f91a8d3b537b2, type: 2}
     - target: {fileID: 4262085470061813834, guid: 1ecd8dd4ba63f0148a13b583d7124014, type: 3}
       propertyPath: m_Name
       value: TriangleSurface
