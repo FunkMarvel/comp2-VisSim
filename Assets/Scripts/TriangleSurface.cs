@@ -24,8 +24,20 @@ public struct TriangleData
         Neighbours = new[] { T0, T1, T2 };
     }
 
-    public int[] Indices { get; private set; }
-    public int[] Neighbours { get; private set; }
+    public int[] Indices { get; }
+    public int[] Neighbours { get; }
+}
+
+public struct Contact
+{
+    public Contact(Vector3 point, Vector3 hitNormal)
+    {
+        Point = point;
+        HitNormal = hitNormal;
+    }
+
+    public Vector3 Point { get; }
+    public Vector3 HitNormal { get; }
 }
 
 // [ExecuteAlways]
@@ -36,8 +48,72 @@ public class TriangleSurface : MonoBehaviour
     [SerializeField] private TextAsset indexFile;
     [SerializeField] private Material material;
 
+    private bool _hasMesh;
+
     public Vector3[] Vertices { get; private set; } // property with public getter and private setter.
     public List<TriangleData> Triangles { get; private set; } // property with public getter and private setter.
+
+    private void Awake()
+    {
+        if(!_hasMesh) CreateSurface();
+        _hasMesh = true;
+    }
+
+    public Contact GetContact(Vector3 center, TriangleData prevTriangle)
+    {
+        Vector3 p = Vertices[prevTriangle.Indices[0]],
+            q = Vertices[prevTriangle.Indices[1]],
+            r = Vertices[prevTriangle.Indices[2]];
+
+        Vector3 uvw = GetBarycentricCoordinates(center, p, q, r);
+        if (uvw.x < 0 || uvw.y < 0 || uvw.z < 0)
+        {
+            int opposingIndex = -1;
+            
+            if (uvw.x <= uvw.y && uvw.x <= uvw.z)
+            {
+                opposingIndex = 0;
+            }
+            else if (uvw.y <= uvw.z)
+            {
+                opposingIndex = 1;
+            }
+            else
+            {
+                opposingIndex = 2;
+            }
+
+            if (prevTriangle.Neighbours[opposingIndex] >= 0)
+                return GetContact(center, Triangles[prevTriangle.Neighbours[opposingIndex]]);
+            
+            Debug.LogWarning("Warning, contact point out of bounds!");
+            return new Contact(Vector3.zero, Vector3.zero);
+        }
+
+        Vector3 hit = uvw.x * p + uvw.y * q + uvw.z * r;
+
+        return new Contact(hit, GetNormalFromTri(prevTriangle));
+    }
+
+    private Vector3 GetNormalFromTri(TriangleData currentTriangle)
+    {
+        return Vector3.Cross(Vertices[currentTriangle.Indices[1]] - Vertices[currentTriangle.Indices[0]],
+            Vertices[currentTriangle.Indices[2]] - Vertices[currentTriangle.Indices[0]]).normalized;
+    }
+
+    public static Vector3 GetBarycentricCoordinates(Vector3 x, Vector3 p, Vector3 q, Vector3 r)
+    {
+        var uvw = Vector3.zero;
+        
+        Vector3 pq = q - p, pr = r - p, px = x - p;
+        
+        float determinant = pq.x * pr.z - pr.x * pq.z;
+        uvw.y = (px.x * pr.z - pr.x * px.z) / determinant;
+        uvw.z = (pq.x * px.z - px.x * pq.z) / determinant;
+        uvw.x = 1.0f - uvw.y - uvw.z;
+
+        return uvw;
+    }
 
     [ContextMenu("Create Surface")]
     private void CreateSurface()
@@ -55,6 +131,7 @@ public class TriangleSurface : MonoBehaviour
         
         // use chosen material, or default material if nothing is chosen.
         meshRenderer.sharedMaterial = material != null ? material : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
+        _hasMesh = true;
     }
 
     private void ReadVertexData()
