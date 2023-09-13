@@ -16,18 +16,31 @@ using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// Struct containing read-only triangulation data for single triangle.
+/// </summary>
 public struct TriangleData
 {
-    public TriangleData(int v0, int v1, int v2, int T0, int T1, int T2)
+    public TriangleData(int v0, int v1, int v2, int triangle0, int triangle1, int triangle2)
     {
         Indices = new[] { v0, v1, v2 };
-        Neighbours = new[] { T0, T1, T2 };
+        Neighbours = new[] { triangle0, triangle1, triangle2 };
     }
 
+    /// <summary>
+    /// Vertex indices of triangle.
+    /// </summary>
     public int[] Indices { get; }
+    
+    /// <summary>
+    /// Indices of neighbouring triangles.
+    /// </summary>
     public int[] Neighbours { get; }
 }
 
+/// <summary>
+/// Struct containing read-only data for collision contacts.
+/// </summary>
 public struct Contact
 {
     public Contact(Vector3 point, Vector3 hitNormal)
@@ -36,63 +49,90 @@ public struct Contact
         HitNormal = hitNormal;
     }
 
+    /// <summary>
+    /// Location of collision contact in world-space.
+    /// </summary>
     public Vector3 Point { get; }
+    
+    /// <summary>
+    /// Unit normal at contact-point.
+    /// </summary>
     public Vector3 HitNormal { get; }
 }
 
-// [ExecuteAlways]
+
+/// <summary>
+/// Class for creating triangle-surface from data files.
+/// </summary>
 public class TriangleSurface : MonoBehaviour
 {
-    [SerializeField] private Vector3 offset;
-    [SerializeField] private TextAsset vertexFile;
-    [SerializeField] private TextAsset indexFile;
-    [SerializeField] private Material material;
+    // properties that are set in editor:
+    [SerializeField] private Vector3 offset;  // object mesh offset for proper centering in world.
+    [SerializeField] private TextAsset vertexFile;  // reference to text-file with vertices.
+    [SerializeField] private TextAsset indexFile;  // reference to text-file with triangulation-data.
+    [SerializeField] private Material material;  // reference to Unity-material to color mesh with.
 
+    // for checking if mesh has been generated.
     private bool _hasMesh;
+    private TriangleData _currentTriangle; // for keeping track of ball.
 
+    /// <summary>
+    /// Array of vertices.
+    /// </summary>
     public Vector3[] Vertices { get; private set; } // property with public getter and private setter.
+    
+    /// <summary>
+    /// Dynamic array with triangulation data.
+    /// </summary>
     public List<TriangleData> Triangles { get; private set; } // property with public getter and private setter.
 
     private void Awake()
     {
-        if(!_hasMesh) CreateSurface();
+        // run after every object in scene is created, but before first frame.
+        
+        if (!_hasMesh) CreateSurface(); // create mesh if necessary.
         _hasMesh = true;
     }
 
-    public Contact GetContact(Vector3 center, TriangleData prevTriangle)
+    /// <summary>
+    /// Project position onto surface along vertical axis (y-axis).
+    /// </summary>
+    /// <param name="position">Position to find contact of.</param>
+    /// <returns></returns>
+    public Contact ProjectOntoSurface(Vector3 position)
     {
-        Vector3 p = Vertices[prevTriangle.Indices[0]],
-            q = Vertices[prevTriangle.Indices[1]],
-            r = Vertices[prevTriangle.Indices[2]];
-
-        Vector3 uvw = GetBarycentricCoordinates(center, p, q, r);
-        if (uvw.x < 0 || uvw.y < 0 || uvw.z < 0)
+        while (true)
         {
-            int opposingIndex = -1;
-            
-            if (uvw.x <= uvw.y && uvw.x <= uvw.z)
+            Vector3 p = Vertices[_currentTriangle.Indices[0]],
+                q = Vertices[_currentTriangle.Indices[1]],
+                r = Vertices[_currentTriangle.Indices[2]];
+
+            var uvw = GetBarycentricCoordinates(position, p, q, r);
+            if (uvw is { x: >= 0, y: >= 0, z: >= 0 })
             {
-                opposingIndex = 0;
-            }
-            else if (uvw.y <= uvw.z)
-            {
-                opposingIndex = 1;
-            }
-            else
-            {
-                opposingIndex = 2;
+                var hit = uvw.x * p + uvw.y * q + uvw.z * r;
+
+                return new Contact(hit, GetNormalFromTri(_currentTriangle));
             }
 
-            if (prevTriangle.Neighbours[opposingIndex] >= 0)
-                return GetContact(center, Triangles[prevTriangle.Neighbours[opposingIndex]]);
-            
+            int opposingIndex;
+
+            if (uvw.x <= uvw.y && uvw.x <= uvw.z)
+                opposingIndex = 0;
+            else if (uvw.y <= uvw.z)
+                opposingIndex = 1;
+            else
+                opposingIndex = 2;
+
+            if (_currentTriangle.Neighbours[opposingIndex] >= 0)
+            {
+                _currentTriangle = Triangles[_currentTriangle.Neighbours[opposingIndex]];
+                continue;
+            }
+
             Debug.LogWarning("Warning, contact point out of bounds!");
             return new Contact(Vector3.zero, Vector3.zero);
         }
-
-        Vector3 hit = uvw.x * p + uvw.y * q + uvw.z * r;
-
-        return new Contact(hit, GetNormalFromTri(prevTriangle));
     }
 
     private Vector3 GetNormalFromTri(TriangleData currentTriangle)
@@ -104,10 +144,10 @@ public class TriangleSurface : MonoBehaviour
     public static Vector3 GetBarycentricCoordinates(Vector3 x, Vector3 p, Vector3 q, Vector3 r)
     {
         var uvw = Vector3.zero;
-        
+
         Vector3 pq = q - p, pr = r - p, px = x - p;
-        
-        float determinant = pq.x * pr.z - pr.x * pq.z;
+
+        var determinant = pq.x * pr.z - pr.x * pq.z;
         uvw.y = (px.x * pr.z - pr.x * px.z) / determinant;
         uvw.z = (pq.x * px.z - px.x * pq.z) / determinant;
         uvw.x = 1.0f - uvw.y - uvw.z;
@@ -128,9 +168,11 @@ public class TriangleSurface : MonoBehaviour
         var meshRenderer = gameObject.AddComponent<MeshRenderer>();
 
         filter.sharedMesh = GenerateMesh();
-        
+
         // use chosen material, or default material if nothing is chosen.
-        meshRenderer.sharedMaterial = material != null ? material : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
+        meshRenderer.sharedMaterial = material != null
+            ? material
+            : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
         _hasMesh = true;
     }
 
@@ -170,8 +212,6 @@ public class TriangleSurface : MonoBehaviour
                 continue;
             }
 
-            var position = transform.position;
-            
             vertices[i - 1] = new Vector3(
                 float.Parse(elements[0], CultureInfo.InvariantCulture),
                 float.Parse(elements[1], CultureInfo.InvariantCulture),
@@ -179,10 +219,7 @@ public class TriangleSurface : MonoBehaviour
             );
         }
 
-        for (int i = 0; i < vertices.Length; i++)
-        {
-            vertices[i] -= offset;
-        }
+        for (var i = 0; i < vertices.Length; i++) vertices[i] -= offset;
 
         Vertices = vertices;
     }
