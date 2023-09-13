@@ -17,7 +17,7 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Struct containing read-only triangulation data for single triangle.
+///     Struct containing read-only triangulation data for single triangle.
 /// </summary>
 public struct TriangleData
 {
@@ -28,18 +28,18 @@ public struct TriangleData
     }
 
     /// <summary>
-    /// Vertex indices of triangle.
+    ///     Vertex indices of triangle.
     /// </summary>
     public int[] Indices { get; }
-    
+
     /// <summary>
-    /// Indices of neighbouring triangles.
+    ///     Indices of neighbouring triangles.
     /// </summary>
     public int[] Neighbours { get; }
 }
 
 /// <summary>
-/// Struct containing read-only data for collision contacts.
+///     Struct containing read-only data for collision contacts.
 /// </summary>
 public struct Contact
 {
@@ -50,52 +50,52 @@ public struct Contact
     }
 
     /// <summary>
-    /// Location of collision contact in world-space.
+    ///     Location of collision contact in world-space.
     /// </summary>
     public Vector3 Point { get; }
-    
+
     /// <summary>
-    /// Unit normal at contact-point.
+    ///     Unit normal at contact-point.
     /// </summary>
     public Vector3 HitNormal { get; }
 }
 
 
 /// <summary>
-/// Class for creating triangle-surface from data files.
+///     Class for creating triangle-surface from data files.
 /// </summary>
 public class TriangleSurface : MonoBehaviour
 {
     // properties that are set in editor:
-    [SerializeField] private Vector3 offset;  // object mesh offset for proper centering in world.
-    [SerializeField] private TextAsset vertexFile;  // reference to text-file with vertices.
-    [SerializeField] private TextAsset indexFile;  // reference to text-file with triangulation-data.
-    [SerializeField] private Material material;  // reference to Unity-material to color mesh with.
+    [SerializeField] private Vector3 offset; // object mesh offset for proper centering in world.
+    [SerializeField] private TextAsset vertexFile; // reference to text-file with vertices.
+    [SerializeField] private TextAsset indexFile; // reference to text-file with triangulation-data.
+    [SerializeField] private Material material; // reference to Unity-material to color mesh with.
+    private TriangleData _currentTriangle; // for keeping track of ball.
 
     // for checking if mesh has been generated.
     private bool _hasMesh;
-    private TriangleData _currentTriangle; // for keeping track of ball.
 
     /// <summary>
-    /// Array of vertices.
+    ///     Array of vertices.
     /// </summary>
     public Vector3[] Vertices { get; private set; } // property with public getter and private setter.
-    
+
     /// <summary>
-    /// Dynamic array with triangulation data.
+    ///     Dynamic array with triangulation data.
     /// </summary>
     public List<TriangleData> Triangles { get; private set; } // property with public getter and private setter.
 
     private void Awake()
     {
         // run after every object in scene is created, but before first frame.
-        
+
         if (!_hasMesh) CreateSurface(); // create mesh if necessary.
         _hasMesh = true;
     }
 
     /// <summary>
-    /// Project position onto surface along vertical axis (y-axis).
+    ///     Project position onto surface along vertical axis (y-axis).
     /// </summary>
     /// <param name="position">Position to find contact of.</param>
     /// <returns></returns>
@@ -141,7 +141,7 @@ public class TriangleSurface : MonoBehaviour
             Vertices[currentTriangle.Indices[2]] - Vertices[currentTriangle.Indices[0]]).normalized;
     }
 
-    public static Vector3 GetBarycentricCoordinates(Vector3 x, Vector3 p, Vector3 q, Vector3 r)
+    private static Vector3 GetBarycentricCoordinates(Vector3 x, Vector3 p, Vector3 q, Vector3 r)
     {
         var uvw = Vector3.zero;
 
@@ -292,13 +292,9 @@ public class TriangleSurface : MonoBehaviour
             vertices = Vertices,
             triangles = GenerateIndexArray()
         };
-
-        // newMesh.RecalculateBounds();
+        
         newMesh.RecalculateNormals();
         newMesh.RecalculateTangents();
-
-        // var bounds = newMesh.bounds;
-        // transform.position -= bounds.center;
 
         return newMesh;
     }
