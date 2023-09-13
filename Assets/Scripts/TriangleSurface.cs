@@ -4,7 +4,7 @@
 // //FileType: Visual C# Source file
 // //Author : Anders P. Åsbø
 // //Created On : 12/09/2023
-// //Last Modified On : 13/09/2023
+// //Last Modified On : 14/09/2023
 // //Copy Rights : Anders P. Åsbø
 // //Description :
 // //////////////////////////////////////////////////////////////////////////
@@ -90,8 +90,28 @@ public class TriangleSurface : MonoBehaviour
     {
         // run after every object in scene is created, but before first frame.
 
-        if (!_hasMesh) CreateSurface(); // create mesh if necessary.
-        _hasMesh = true;
+        if (!_hasMesh)
+        {
+            CreateSurface(); // create mesh if necessary.
+            _hasMesh = true;
+        }
+
+        _currentTriangle = Triangles[0];
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (_hasMesh) return;
+
+        ReadVertexData();
+        ReadIndexData();
+
+        foreach (var triangle in Triangles)
+        {
+            Gizmos.DrawLine(Vertices[triangle.Indices[0]], Vertices[triangle.Indices[1]]);
+            Gizmos.DrawLine(Vertices[triangle.Indices[2]], Vertices[triangle.Indices[1]]);
+            Gizmos.DrawLine(Vertices[triangle.Indices[0]], Vertices[triangle.Indices[2]]);
+        }
     }
 
     /// <summary>
@@ -155,7 +175,6 @@ public class TriangleSurface : MonoBehaviour
         return uvw;
     }
 
-    [ContextMenu("Create Surface")]
     private void CreateSurface()
     {
         if (vertexFile == null || indexFile == null)
@@ -173,6 +192,7 @@ public class TriangleSurface : MonoBehaviour
         meshRenderer.sharedMaterial = material != null
             ? material
             : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
+
         _hasMesh = true;
     }
 
@@ -292,7 +312,7 @@ public class TriangleSurface : MonoBehaviour
             vertices = Vertices,
             triangles = GenerateIndexArray()
         };
-        
+
         newMesh.RecalculateNormals();
         newMesh.RecalculateTangents();
 
