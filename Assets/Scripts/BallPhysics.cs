@@ -17,7 +17,7 @@ public class BallPhysics : MonoBehaviour
 {
     [SerializeField] private TriangleSurface triangleSurface;
     private Vector3 _velocity = Vector3.zero;
-    private TriangleData _currentTriangle;
+    
     private bool _hasSurfaceRef;
 
     private void Awake()
