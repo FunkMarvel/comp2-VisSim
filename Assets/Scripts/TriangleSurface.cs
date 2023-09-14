@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Events;
 
 /// <summary>
 ///     Struct containing read-only triangulation data for single triangle.
@@ -102,10 +103,11 @@ public class TriangleSurface : MonoBehaviour
     private void OnDrawGizmos()
     {
 
-        if (_hasMesh) return;
-
-        ReadVertexData();
-        ReadIndexData();
+        if (!_hasMesh)
+        {
+            ReadVertexData();
+            ReadIndexData();
+        }
 
         foreach (var triangle in Triangles)
         {
@@ -148,6 +150,7 @@ public class TriangleSurface : MonoBehaviour
             if (_currentTriangle.Neighbours[opposingIndex] >= 0)
             {
                 _currentTriangle = Triangles[_currentTriangle.Neighbours[opposingIndex]];
+                
                 continue;
             }
 
