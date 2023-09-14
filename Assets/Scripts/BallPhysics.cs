@@ -22,7 +22,7 @@ public class BallPhysics : MonoBehaviour
 
     [SerializeField] [Min(0)] private float radius = 1;
     [SerializeField] [Min(0)] private float kineticFrictionCoefficient = 0;
-    [SerializeField] [Range(0, 1)] private float restitutionCoefficient = 1;
+    [SerializeField] [Range(0, 1)] private float bounciness = 1;
 
     private bool _hasSurfaceRef;
     private TriangleSurface _triangleSurface;
@@ -59,7 +59,7 @@ public class BallPhysics : MonoBehaviour
             if (Vector3.Distance(hit.Point, transform.position) <= radius)
             {
                 Vector3 parallelUnitVector = Vector3.ProjectOnPlane(_velocity, hit.HitNormal).normalized;
-                _velocity = -restitutionCoefficient*Vector3.Dot(_velocity, hit.HitNormal)*hit.HitNormal + Vector3.ProjectOnPlane(_velocity, hit.HitNormal);
+                _velocity = -bounciness*Vector3.Dot(_velocity, hit.HitNormal)*hit.HitNormal + Vector3.ProjectOnPlane(_velocity, hit.HitNormal);
                 
                 float normalForceMagnitude = Vector3.Dot(netForce, hit.HitNormal);
                 
