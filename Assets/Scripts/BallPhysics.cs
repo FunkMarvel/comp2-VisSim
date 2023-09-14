@@ -21,7 +21,7 @@ public class BallPhysics : MonoBehaviour
     private float mass = 1;
 
     [SerializeField] [Min(0)] private float radius = 1;
-    [SerializeField] [Min(0)] private float kineticFrictionCoefficient = 0;
+    [SerializeField] [Min(0)] private float rollingResistance = 0;
     [SerializeField] [Range(0, 1)] private float bounciness = 1;
 
     private bool _hasSurfaceRef;
@@ -51,42 +51,47 @@ public class BallPhysics : MonoBehaviour
 
     private void FixedUpdate()
     {
+        Transform transform1 = transform;
+        var position = transform1.position;
+        
+        float rollingCoefficient = _velocity.magnitude > 1e-15f ? rollingResistance : 0;
+        
         Vector3 netForce = Physics.gravity * mass;
-        float frictionCoefficient = _velocity.magnitude > 1e-15f ? kineticFrictionCoefficient : 0;
         
         if (_hasSurfaceRef)
         {
-            var position = transform.position;
+            
+            
             var hit = _triangleSurface.ProjectOntoSurface(position);
             Vector3 distVec = position - hit.Point;
             float dist = distVec.magnitude;
             
             if (dist <= radius)
             {
-                // if (Mathf.Abs(dist - radius) > 1e-16f) transform.position += (radius - dist) * distVec.normalized;
-                transform.position += (radius - dist) * distVec.normalized;
+                if (Mathf.Abs(dist - radius) > 0.5f*radius) transform.position += (radius - dist) * distVec.normalized;
+                // transform.position += (radius - dist) * distVec.normalized;
                 
                 Vector3 parallelUnitVector = Vector3.ProjectOnPlane(_velocity, hit.HitNormal).normalized;
                 _velocity = -bounciness*Vector3.Dot(_velocity, hit.HitNormal)*hit.HitNormal + Vector3.ProjectOnPlane(_velocity, hit.HitNormal);
                 
                 float normalForceMagnitude = Vector3.Dot(netForce, hit.HitNormal);
                 
-                netForce -= (hit.HitNormal - frictionCoefficient*parallelUnitVector)*normalForceMagnitude;
+                netForce -= (hit.HitNormal - rollingCoefficient*parallelUnitVector)*normalForceMagnitude;
             }
 
             if (!_outOfBounds && hit.HitNormal.magnitude < 1e-15f)
             {
-                Destroy(this, 0.5f);
                 _outOfBounds = true;
+                Destroy(this);
             }
         }
 
         Vector3 acceleration = netForce / mass;
         _velocity += acceleration * Time.fixedDeltaTime;
-        Transform transform1;
-        (transform1 = transform).Translate(_velocity*Time.fixedDeltaTime);
         
-        Debug.Log($"Position: {transform1.position} | " +
+        transform1.Translate(_velocity*Time.fixedDeltaTime);
+        
+        Debug.Log($"Position: {position} | " +
                   $"Velocity {_velocity} | " +
                   $"Acceleration {acceleration}");
     }
