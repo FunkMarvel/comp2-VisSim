@@ -41,9 +41,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 4262085470061813834}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d620efc771592fe4a9c1f3b88bac18e0, type: 3}
+  m_Script: {fileID: 11500000, guid: 056300bd7391a2f40a76d4de52b7505b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vertexFile: {fileID: 4900000, guid: 8ae67a02e1aa57b479c5bec7842fe7a4, type: 3}
-  indexFile: {fileID: 4900000, guid: f7b75572826856c4fa6aa9e01794c028, type: 3}
-  material: {fileID: 2100000, guid: 9a389361491898e4a99f91a8d3b537b2, type: 2}
+  offset: {x: 0, y: 0, z: 0}
+  vertexFile: {fileID: 0}
+  indexFile: {fileID: 0}
+  material: {fileID: 0}
