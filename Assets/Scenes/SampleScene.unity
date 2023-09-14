@@ -205,8 +205,8 @@ MonoBehaviour:
   triangleSurfaceRef: {fileID: 201472579}
   mass: 0.03
   radius: 0.03
-  kineticFrictionCoefficient: 0
-  bounciness: 0
+  rollingResistance: 0
+  bounciness: 0.6
 --- !u!23 &535819739
 MeshRenderer:
   m_ObjectHideFlags: 0
