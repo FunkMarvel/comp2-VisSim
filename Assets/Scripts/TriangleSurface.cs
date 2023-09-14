@@ -101,6 +101,7 @@ public class TriangleSurface : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        return;
         if (_hasMesh) return;
 
         ReadVertexData();
