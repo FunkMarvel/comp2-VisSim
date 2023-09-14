@@ -55,9 +55,15 @@ public class BallPhysics : MonoBehaviour
         
         if (_hasSurfaceRef)
         {
-            var hit = _triangleSurface.ProjectOntoSurface(transform.position);
-            if (Vector3.Distance(hit.Point, transform.position) <= radius)
+            var position = transform.position;
+            var hit = _triangleSurface.ProjectOntoSurface(position);
+            Vector3 distVec = position - hit.Point;
+            float dist = distVec.magnitude;
+            
+            if (dist <= radius)
             {
+                if (Mathf.Abs(dist - radius) > 1e-4) transform.position += (radius - dist) * distVec.normalized;
+                
                 Vector3 parallelUnitVector = Vector3.ProjectOnPlane(_velocity, hit.HitNormal).normalized;
                 _velocity = -bounciness*Vector3.Dot(_velocity, hit.HitNormal)*hit.HitNormal + Vector3.ProjectOnPlane(_velocity, hit.HitNormal);
                 
