@@ -205,7 +205,7 @@ MonoBehaviour:
   triangleSurfaceRef: {fileID: 201472579}
   mass: 0.03
   radius: 0.03
-  kineticFrictionCoefficient: 0
+  kineticFrictionCoefficient: 0.049
   bounciness: 0
 --- !u!23 &535819739
 MeshRenderer:
@@ -266,7 +266,7 @@ Transform:
   m_GameObject: {fileID: 535819736}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.399, y: 0.1, z: -0.2}
+  m_LocalPosition: {x: -0.4, y: 0.1, z: -0.2}
   m_LocalScale: {x: 0.03, y: 0.03, z: 0.03}
   m_ConstrainProportionsScale: 1
   m_Children: []
