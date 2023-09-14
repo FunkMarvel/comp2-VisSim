@@ -26,6 +26,7 @@ public class BallPhysics : MonoBehaviour
 
     private bool _hasSurfaceRef;
     private TriangleSurface _triangleSurface;
+    private bool _outOfBounds;
 
     private Vector3 _velocity = Vector3.zero;
 
@@ -62,7 +63,8 @@ public class BallPhysics : MonoBehaviour
             
             if (dist <= radius)
             {
-                if (Mathf.Abs(dist - radius) > 1e-4) transform.position += (radius - dist) * distVec.normalized;
+                // if (Mathf.Abs(dist - radius) > 1e-16f) transform.position += (radius - dist) * distVec.normalized;
+                transform.position += (radius - dist) * distVec.normalized;
                 
                 Vector3 parallelUnitVector = Vector3.ProjectOnPlane(_velocity, hit.HitNormal).normalized;
                 _velocity = -bounciness*Vector3.Dot(_velocity, hit.HitNormal)*hit.HitNormal + Vector3.ProjectOnPlane(_velocity, hit.HitNormal);
@@ -71,9 +73,21 @@ public class BallPhysics : MonoBehaviour
                 
                 netForce -= (hit.HitNormal - frictionCoefficient*parallelUnitVector)*normalForceMagnitude;
             }
+
+            if (!_outOfBounds && hit.HitNormal.magnitude < 1e-15f)
+            {
+                Destroy(this, 0.5f);
+                _outOfBounds = true;
+            }
         }
 
-        _velocity += netForce * Time.fixedDeltaTime / mass;
-        transform.Translate(_velocity*Time.fixedDeltaTime);
+        Vector3 acceleration = netForce / mass;
+        _velocity += acceleration * Time.fixedDeltaTime;
+        Transform transform1;
+        (transform1 = transform).Translate(_velocity*Time.fixedDeltaTime);
+        
+        Debug.Log($"Position: {transform1.position} | " +
+                  $"Velocity {_velocity} | " +
+                  $"Acceleration {acceleration}");
     }
 }
