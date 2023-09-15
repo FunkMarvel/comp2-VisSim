@@ -65,7 +65,6 @@ public class BallPhysics : MonoBehaviour
             {
                 if (Mathf.Abs(dist - radius) > 0.5f * radius)
                     transform.position += (radius - dist) * distVec.normalized;
-                // transform.position += (radius - dist) * distVec.normalized;
 
                 var parallelUnitVector = Vector3.ProjectOnPlane(_velocity, hit.HitNormal).normalized;
                 _velocity = -bounciness * Vector3.Dot(_velocity, hit.HitNormal) * hit.HitNormal +
