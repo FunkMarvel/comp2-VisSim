@@ -3,7 +3,7 @@
 // //FileName: TriangleSurface.cs
 // //FileType: Visual C# Source file
 // //Author : Anders P. Åsbø
-// //Created On : 12/09/2023
+// //Created On : 14/09/2023
 // //Last Modified On : 14/09/2023
 // //Copy Rights : Anders P. Åsbø
 // //Description :
@@ -107,10 +107,11 @@ public class TriangleSurface : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (_hasMesh) return;
-
-        ReadVertexData();
-        ReadIndexData();
+        if (!_hasMesh)
+        {
+            ReadVertexData();
+            ReadIndexData();
+        }
 
         foreach (var triangle in Triangles)
         {
@@ -159,6 +160,7 @@ public class TriangleSurface : MonoBehaviour
             if (_currentTriangle.Neighbours[opposingIndex] >= 0)
             {
                 _currentTriangle = Triangles[_currentTriangle.Neighbours[opposingIndex]];
+
                 continue;
             }
 
