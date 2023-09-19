@@ -10,6 +10,7 @@
 // //////////////////////////////////////////////////////////////////////////
 // //////////////////////////////
 
+using System;
 using UnityEngine;
 
 public class BallPhysics : MonoBehaviour
@@ -28,6 +29,7 @@ public class BallPhysics : MonoBehaviour
     private TriangleSurface _triangleSurface;
 
     private Vector3 _velocity = Vector3.zero;
+    private Vector3 _prevContact = Vector3.zero;
 
     private void Awake()
     {
@@ -56,6 +58,7 @@ public class BallPhysics : MonoBehaviour
         if (_hasSurfaceRef)
         {
             var hit = _triangleSurface.ProjectOntoSurface(transform.position);
+            _prevContact = hit.Point;
             if (Vector3.Distance(hit.Point, transform.position) <= radius)
             {
                 Vector3 parallelUnitVector = Vector3.ProjectOnPlane(_velocity, hit.HitNormal).normalized;
@@ -69,5 +72,11 @@ public class BallPhysics : MonoBehaviour
 
         _velocity += netForce * Time.fixedDeltaTime / mass;
         transform.Translate(_velocity*Time.fixedDeltaTime);
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawSphere(_prevContact, 0.3f);
     }
 }

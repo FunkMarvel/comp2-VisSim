@@ -21,8 +21,9 @@ using UnityEngine;
 /// </summary>
 public struct TriangleData
 {
-    public TriangleData(int v0, int v1, int v2, int triangle0, int triangle1, int triangle2)
+    public TriangleData(int v0, int v1, int v2, int triangle0, int triangle1, int triangle2, Vector3 surfaceNormal)
     {
+        SurfaceNormal = surfaceNormal;
         Indices = new[] { v0, v1, v2 };
         Neighbours = new[] { triangle0, triangle1, triangle2 };
     }
@@ -36,6 +37,11 @@ public struct TriangleData
     ///     Indices of neighbouring triangles.
     /// </summary>
     public int[] Neighbours { get; }
+    
+    /// <summary>
+    ///     Unit normal vetor of triangle;
+    /// </summary>
+    public Vector3 SurfaceNormal { get; }
 }
 
 /// <summary>
@@ -130,9 +136,15 @@ public class TriangleSurface : MonoBehaviour
             var uvw = GetBarycentricCoordinates(position, p, q, r);
             if (uvw is { x: >= 0, y: >= 0, z: >= 0 })
             {
-                var hit = uvw.x * p + uvw.y * q + uvw.z * r;
+                // calculating point on surface directly below given position:
+                var normal = _currentTriangle.SurfaceNormal;
+                var hitPosition = uvw.x * p + uvw.y * q + uvw.z * r;
+                
+                // correcting projected point to be closest point from position to surface:
+                var diffVec = hitPosition - position;
+                hitPosition = position + Vector3.Dot(diffVec, normal) * normal;
 
-                return new Contact(hit, GetNormalFromTri(_currentTriangle));
+                return new Contact(hitPosition, normal);
             }
 
             int opposingIndex;
@@ -155,10 +167,10 @@ public class TriangleSurface : MonoBehaviour
         }
     }
 
-    private Vector3 GetNormalFromTri(TriangleData currentTriangle)
+    private Vector3 GetNormalFromTri(int p, int q, int r)
     {
-        return Vector3.Cross(Vertices[currentTriangle.Indices[1]] - Vertices[currentTriangle.Indices[0]],
-            Vertices[currentTriangle.Indices[2]] - Vertices[currentTriangle.Indices[0]]).normalized;
+        return Vector3.Cross(Vertices[q] - Vertices[p],
+            Vertices[r] - Vertices[p]).normalized;
     }
 
     private static Vector3 GetBarycentricCoordinates(Vector3 x, Vector3 p, Vector3 q, Vector3 r)
@@ -280,13 +292,18 @@ public class TriangleSurface : MonoBehaviour
                 continue;
             }
 
+            int p = int.Parse(elements[0]),
+                q = int.Parse(elements[1]),
+                r = int.Parse(elements[2]);
+
             Triangles.Add(new TriangleData(
-                int.Parse(elements[0]),
-                int.Parse(elements[1]),
-                int.Parse(elements[2]),
+                p,
+                q,
+                r,
                 int.Parse(elements[3]),
                 int.Parse(elements[4]),
-                int.Parse(elements[5])
+                int.Parse(elements[5]),
+                GetNormalFromTri(p, q, r)
             ));
         }
     }
