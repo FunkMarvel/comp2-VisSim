@@ -4,9 +4,9 @@
 // //FileType: Visual C# Source file
 // //Author : Anders P. Åsbø
 // //Created On : 14/09/2023
-// //Last Modified On : 14/09/2023
+// //Last Modified On : 20/09/2023
 // //Copy Rights : Anders P. Åsbø
-// //Description :
+// //Description : Class for creating dynamic triangle surfaces at runtime.
 // //////////////////////////////////////////////////////////////////////////
 // //////////////////////////////
 
@@ -15,57 +15,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using UnityEditor;
 using UnityEngine;
-
-/// <summary>
-///     Struct containing read-only triangulation data for single triangle.
-/// </summary>
-public struct TriangleData
-{
-    public TriangleData(int v0, int v1, int v2, int triangle0, int triangle1, int triangle2, Vector3 surfaceNormal)
-    {
-        SurfaceNormal = surfaceNormal;
-        Indices = new[] { v0, v1, v2 };
-        Neighbours = new[] { triangle0, triangle1, triangle2 };
-    }
-
-    /// <summary>
-    ///     Vertex indices of triangle.
-    /// </summary>
-    public int[] Indices { get; }
-
-    /// <summary>
-    ///     Indices of neighbouring triangles.
-    /// </summary>
-    public int[] Neighbours { get; }
-    
-    /// <summary>
-    ///     Unit normal vetor of triangle;
-    /// </summary>
-    public Vector3 SurfaceNormal { get; }
-}
-
-/// <summary>
-///     Struct containing read-only data for collision contacts.
-/// </summary>
-public struct Contact
-{
-    public Contact(Vector3 point, Vector3 hitNormal)
-    {
-        Point = point;
-        HitNormal = hitNormal;
-    }
-
-    /// <summary>
-    ///     Location of collision contact in world-space.
-    /// </summary>
-    public Vector3 Point { get; }
-
-    /// <summary>
-    ///     Unit normal at contact-point.
-    /// </summary>
-    public Vector3 HitNormal { get; }
-}
-
 
 /// <summary>
 ///     Class for creating triangle-surface from data files.
@@ -105,9 +54,12 @@ public class TriangleSurface : MonoBehaviour
         _currentTriangle = Triangles[0];
     }
 
+    /// <summary>
+    ///     Draw debug lines in editor.
+    /// </summary>
     private void OnDrawGizmos()
     {
-        if (!_hasMesh)
+        if (!_hasMesh) // read in mesh data when game is not running.
         {
             ReadVertexData();
             ReadIndexData();
@@ -122,25 +74,26 @@ public class TriangleSurface : MonoBehaviour
     }
 
     /// <summary>
-    ///     Project position onto surface along vertical axis (y-axis).
+    ///     Project position onto surface along surface normal.
     /// </summary>
     /// <param name="position">Position to find contact of.</param>
-    /// <returns></returns>
-    public Contact ProjectOntoSurface(Vector3 position)
+    /// <returns>struct with contact point and hit normal. If hit normal is zero vector, then no hit was found.</returns>
+    public Contact GetCollision(Vector3 position)
     {
         while (true)
         {
+            // get vertices of current triangle:
             Vector3 p = Vertices[_currentTriangle.Indices[0]],
                 q = Vertices[_currentTriangle.Indices[1]],
                 r = Vertices[_currentTriangle.Indices[2]];
 
             var uvw = GetBarycentricCoordinates(position, p, q, r);
-            if (uvw is { x: >= 0, y: >= 0, z: >= 0 })
+            if (uvw is { x: >= 0, y: >= 0, z: >= 0 }) // check if inside triangle
             {
                 // calculating point on surface directly below given position:
                 var normal = _currentTriangle.SurfaceNormal;
                 var hitPosition = uvw.x * p + uvw.y * q + uvw.z * r;
-                
+
                 // correcting projected point to be closest point from position to surface:
                 var diffVec = hitPosition - position;
                 hitPosition = position + Vector3.Dot(diffVec, normal) * normal;
@@ -150,6 +103,7 @@ public class TriangleSurface : MonoBehaviour
 
             int opposingIndex;
 
+            // if not inside triangle, find neighbour triangle opposite vertex with smallest coordinate:
             if (uvw.x <= uvw.y && uvw.x <= uvw.z)
                 opposingIndex = 0;
             else if (uvw.y <= uvw.z)
@@ -160,35 +114,53 @@ public class TriangleSurface : MonoBehaviour
             if (_currentTriangle.Neighbours[opposingIndex] >= 0)
             {
                 _currentTriangle = Triangles[_currentTriangle.Neighbours[opposingIndex]];
-
-                continue;
+                continue; // if neighbour triangle exists, jump to next iteration of loop.
             }
 
+            // if neighbour triangle was not found, return contact with normal vector set to zero vector.
             Debug.LogWarning("Warning, contact point out of bounds!");
             return new Contact(Vector3.zero, Vector3.zero);
         }
     }
 
+    /// <summary>
+    ///     calculate surface normal of triangle from vertices.
+    /// </summary>
+    /// <param name="p">index of first vertex</param>
+    /// <param name="q">index of second vertex</param>
+    /// <param name="r">index of third vertex</param>
+    /// <returns>Left-handed surface-normal of triangle</returns>
     private Vector3 GetNormalFromTri(int p, int q, int r)
     {
         return Vector3.Cross(Vertices[q] - Vertices[p],
             Vertices[r] - Vertices[p]).normalized;
     }
 
+    /// <summary>
+    ///     Calculate barycentric coordinates of point x in triangle with vertices p, q and r.
+    /// </summary>
+    /// <param name="x">point to locate</param>
+    /// <param name="p">first vertex</param>
+    /// <param name="q">second vertex</param>
+    /// <param name="r">third vertex</param>
+    /// <returns>vector with [u, v, w]</returns>
     private static Vector3 GetBarycentricCoordinates(Vector3 x, Vector3 p, Vector3 q, Vector3 r)
     {
         var uvw = Vector3.zero;
 
         Vector3 pq = q - p, pr = r - p, px = x - p;
 
-        var determinant = pq.x * pr.z - pr.x * pq.z;
-        uvw.y = (px.x * pr.z - pr.x * px.z) / determinant;
-        uvw.z = (pq.x * px.z - px.x * pq.z) / determinant;
+        var signedArea = pq.x * pr.z - pr.x * pq.z;
+        uvw.y = (px.x * pr.z - pr.x * px.z) / signedArea;
+        uvw.z = (pq.x * px.z - px.x * pq.z) / signedArea;
         uvw.x = 1.0f - uvw.y - uvw.z;
 
         return uvw;
     }
 
+    /// <summary>
+    ///     Create surface from datafiles.
+    /// </summary>
     private void CreateSurface()
     {
         if (vertexFile == null || indexFile == null)
@@ -197,9 +169,11 @@ public class TriangleSurface : MonoBehaviour
             return;
         }
 
+        // add components for rendering mesh.
         var filter = gameObject.AddComponent<MeshFilter>();
         var meshRenderer = gameObject.AddComponent<MeshRenderer>();
 
+        // assign mesh to render components.
         filter.sharedMesh = GenerateMesh();
 
         // use chosen material, or default material if nothing is chosen.
@@ -207,9 +181,12 @@ public class TriangleSurface : MonoBehaviour
             ? material
             : AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
 
-        _hasMesh = true;
+        _hasMesh = true; // tell gizmos to stop reading data when simulation is running.
     }
 
+    /// <summary>
+    ///     Read vertex-data from file.
+    /// </summary>
     private void ReadVertexData()
     {
         // defines which characters to split file into lines on:
@@ -239,6 +216,7 @@ public class TriangleSurface : MonoBehaviour
 
         for (var i = 1; i <= numVertices; i++)
         {
+            // split line and read coordinates:
             var elements = lines[i].Split(lineDelimiters, StringSplitOptions.RemoveEmptyEntries);
             if (elements.Length < 3)
             {
@@ -253,11 +231,15 @@ public class TriangleSurface : MonoBehaviour
             );
         }
 
+        // center mesh in world-space
         for (var i = 0; i < vertices.Length; i++) vertices[i] -= offset;
 
         Vertices = vertices;
     }
 
+    /// <summary>
+    ///     Read triangulation data from file.
+    /// </summary>
     private void ReadIndexData()
     {
         Triangles = new List<TriangleData>();
@@ -287,6 +269,7 @@ public class TriangleSurface : MonoBehaviour
 
         for (var i = 1; i <= numTriangles; i++)
         {
+            // split line into numbers and add to list of triangles
             var elements = lines[i].Split(lineDelimiters, StringSplitOptions.RemoveEmptyEntries);
             if (elements.Length < 6)
             {
@@ -299,17 +282,21 @@ public class TriangleSurface : MonoBehaviour
                 r = int.Parse(elements[2]);
 
             Triangles.Add(new TriangleData(
-                p,
-                q,
-                r,
-                int.Parse(elements[3]),
-                int.Parse(elements[4]),
-                int.Parse(elements[5]),
-                GetNormalFromTri(p, q, r)
+                p, // vertex
+                q, // vertex
+                r, // vertex
+                int.Parse(elements[3]), // neighbour
+                int.Parse(elements[4]), // neighbour
+                int.Parse(elements[5]), // neighbour
+                GetNormalFromTri(p, q, r) // surface normal
             ));
         }
     }
 
+    /// <summary>
+    ///     Flatten triangle data into single index-array.
+    /// </summary>
+    /// <returns>array with indices of triangle-vertices</returns>
     private int[] GenerateIndexArray()
     {
         var indices = new int[Triangles.Count * 3];
@@ -321,17 +308,24 @@ public class TriangleSurface : MonoBehaviour
         return indices;
     }
 
+    /// <summary>
+    ///     Create mesh from vertex data.
+    /// </summary>
+    /// <returns>Mesh object</returns>
     private Mesh GenerateMesh()
     {
+        // read data:
         ReadVertexData();
         ReadIndexData();
 
+        // set vertex and index arrays:
         var newMesh = new Mesh
         {
             vertices = Vertices,
             triangles = GenerateIndexArray()
         };
 
+        // mesh object requires internal normals and tangents:
         newMesh.RecalculateNormals();
         newMesh.RecalculateTangents();
 
