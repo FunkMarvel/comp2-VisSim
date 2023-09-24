@@ -34,12 +34,12 @@ public class TriangleSurface : MonoBehaviour
     /// <summary>
     ///     Array of vertices.
     /// </summary>
-    public Vector3[] Vertices { get; private set; } // property with public getter and private setter.
+    private Vector3[] Vertices { get; set; }
 
     /// <summary>
     ///     Dynamic array with triangulation data.
     /// </summary>
-    public List<TriangleData> Triangles { get; private set; } // property with public getter and private setter.
+    private List<TriangleData> Triangles { get; set; }
 
     private void Awake()
     {
