@@ -79,7 +79,7 @@ public class BallPhysics : MonoBehaviour
             // get current step and next step contact points:
             var hit = _triangleSurface.GetCollision(position);
             var nextHit = _triangleSurface.GetCollision(position + _velocity * Time.fixedDeltaTime);
-            _prevContact = hit.Point; // store contact point for debug drawing.
+            _prevContact = nextHit.Point; // store contact point for debug drawing.
 
             var distVec = position - hit.Point;
             var dist = distVec.magnitude;
