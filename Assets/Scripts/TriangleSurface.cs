@@ -322,7 +322,7 @@ public class TriangleSurface : MonoBehaviour
         var newMesh = new Mesh
         {
             vertices = Vertices,
-            triangles = GenerateIndexArray()
+            triangles = GenerateIndexArray()  // flatten index-data to single static array
         };
 
         // mesh object requires internal normals and tangents:
