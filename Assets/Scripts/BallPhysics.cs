@@ -24,12 +24,13 @@ public class BallPhysics : MonoBehaviour
     [SerializeField] [Min(0)] private float rollingResistance; // friction, editable in engine.
     [SerializeField] [Range(0, 1)] private float bounciness = 1; // bounciness, editable in engine.
 
-    // bools for reference handling:
+    // booleans for reference handling:
     private bool _hasSurfaceRef;
     private bool _outOfBounds;
 
     // internal variable for drawing contact point:
     private Vector3 _prevContact = Vector3.zero;
+    private float _elapsedTimeSinceContact;
 
     // reference to instance of triangle surface:
     private TriangleSurface _triangleSurface;
@@ -85,23 +86,30 @@ public class BallPhysics : MonoBehaviour
 
             if (dist <= radius) // check if actually colliding
             {
+                _elapsedTimeSinceContact += Time.fixedDeltaTime;
                 // correct position to avoid clipping:
                 position = hit.Point + radius * hit.HitNormal;
 
                 var parallelVelocity = Vector3.ProjectOnPlane(_velocity, hit.HitNormal);
+                var parallelUnit = parallelVelocity.normalized;
 
                 var reflectNorm = (hit.HitNormal + nextHit.HitNormal).normalized;
-                var normalChange = Vector3.Cross(hit.HitNormal, nextHit.HitNormal).sqrMagnitude;
+                var normalChange = Vector3.Dot(
+                    Vector3.Cross(hit.HitNormal, nextHit.HitNormal),
+                    Vector3.Cross(hit.HitNormal, parallelUnit).normalized
+                    );
 
-                if (normalChange <= 0f) // reflect velocity when switching triangle:
-                    _velocity = -bounciness * Vector3.Dot(_velocity, hit.HitNormal) * hit.HitNormal + parallelVelocity;
-                else // bouncing when not switching triangle:
+                if (bounciness <= 0f && normalChange < 0f) // reflect velocity when switching triangle:
                     _velocity -= 2 * Vector3.Dot(_velocity, reflectNorm) * reflectNorm;
+                else // bouncing when not switching triangle:
+                    _velocity = -bounciness * Vector3.Dot(_velocity, hit.HitNormal) * hit.HitNormal + parallelVelocity;
+                    
 
                 // add normal-force:
                 var normalForceMagnitude = Vector3.Dot(netForce, hit.HitNormal);
-                netForce -= (hit.HitNormal - rollingCoefficient * parallelVelocity.normalized) * normalForceMagnitude;
+                netForce -= (hit.HitNormal - rollingCoefficient * parallelUnit) * normalForceMagnitude;
             }
+            Debug.Log($"Normal: {hit.HitNormal}");
 
             // remove physics-script from ball if out of bounds:
             if (!_outOfBounds && Mathf.Approximately(hit.HitNormal.sqrMagnitude, 0f))
@@ -119,8 +127,9 @@ public class BallPhysics : MonoBehaviour
 
         // log position:
         Debug.Log($"Position: {position} | " +
-                  $"Velocity {_velocity} | " +
-                  $"Acceleration {acceleration}");
+                  $"Velocity {_velocity.magnitude:F4} | " +
+                  $"Acceleration {acceleration.magnitude:F4} | " +
+                  $"Time since contact {_elapsedTimeSinceContact:F4}");
     }
 
     /// <summary>
