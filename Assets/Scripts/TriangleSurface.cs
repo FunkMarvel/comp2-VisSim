@@ -54,24 +54,24 @@ public class TriangleSurface : MonoBehaviour
         _currentTriangle = Triangles[0];
     }
 
-    /// <summary>
-    ///     Draw debug lines in editor.
-    /// </summary>
-    private void OnDrawGizmos()
-    {
-        if (!_hasMesh) // read in mesh data when game is not running.
-        {
-            ReadVertexData();
-            ReadIndexData();
-        }
-
-        foreach (var triangle in Triangles)
-        {
-            Gizmos.DrawLine(Vertices[triangle.Indices[0]], Vertices[triangle.Indices[1]]);
-            Gizmos.DrawLine(Vertices[triangle.Indices[2]], Vertices[triangle.Indices[1]]);
-            Gizmos.DrawLine(Vertices[triangle.Indices[0]], Vertices[triangle.Indices[2]]);
-        }
-    }
+    // /// <summary>
+    // ///     Draw debug lines in editor.
+    // /// </summary>
+    // private void OnDrawGizmos()
+    // {
+    //     if (!_hasMesh) // read in mesh data when game is not running.
+    //     {
+    //         ReadVertexData();
+    //         ReadIndexData();
+    //     }
+    //
+    //     foreach (var triangle in Triangles)
+    //     {
+    //         Gizmos.DrawLine(Vertices[triangle.Indices[0]], Vertices[triangle.Indices[1]]);
+    //         Gizmos.DrawLine(Vertices[triangle.Indices[2]], Vertices[triangle.Indices[1]]);
+    //         Gizmos.DrawLine(Vertices[triangle.Indices[0]], Vertices[triangle.Indices[2]]);
+    //     }
+    // }
 
     /// <summary>
     ///     Project position onto surface along surface normal.
