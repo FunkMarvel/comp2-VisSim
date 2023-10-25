@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
 
@@ -7,8 +8,20 @@ public class PointCloud : MonoBehaviour
     [SerializeField] private TextAsset vertexFile;
     [SerializeField] private Vector3 offset;
 
+    public Mesh mesh;
+    public Material material;
+
     private Vector3[] _vertices;
     private ComputeBuffer _pointBuffer;
+    private List<List<Matrix4x4>> _batches = new List<List<Matrix4x4>>();
+
+    private void RenderBatches()
+    {
+        foreach (var batch in _batches)
+        {
+            Graphics.DrawMeshInstanced(mesh, 0, material, batch);
+        }
+    }
     
 
     private void OnEnable()
@@ -22,6 +35,11 @@ public class PointCloud : MonoBehaviour
     {
         _pointBuffer.Release();
         _pointBuffer = null;
+    }
+
+    private void Update()
+    {
+        RenderBatches();
     }
 
     /// <summary>
