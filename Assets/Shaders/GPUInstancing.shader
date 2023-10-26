@@ -20,16 +20,18 @@ Shader "GPU/PointCloudShader"
 
             uniform float4x4 _ObjectToWorld;
             uniform StructuredBuffer<float3> _positions;
+            uniform float4 _maxVec;
 
             v2f vert(appdata_base v, uint svInstanceID : SV_InstanceID)
             {
+                
                 InitIndirectDrawArgs(0);
                 v2f o;
                 uint cmdID = GetCommandID(0);
                 uint instanceID = GetIndirectInstanceID(svInstanceID);
                 float4 wpos = mul(_ObjectToWorld, v.vertex + float4(_positions[instanceID][0], _positions[instanceID][1], _positions[instanceID][2], 0));
                 o.pos = mul(UNITY_MATRIX_VP, wpos);
-                o.color = float4(0.f, instanceID / float(GetIndirectInstanceCount()), cmdID & 1 ? 1.0f : 0.0f, 0.3f);
+                o.color = float4(abs(_positions[instanceID][0]/_maxVec[0]), abs(_positions[instanceID][1]/_maxVec[1]), abs(_positions[instanceID][2]/_maxVec[2]), 0.f);
                 return o;
             }
 
