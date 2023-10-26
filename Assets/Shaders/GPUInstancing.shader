@@ -1,4 +1,4 @@
-Shader "GPU/ExampleShader"
+Shader "GPU/PointCloudShader"
 {
     SubShader
     {
@@ -19,6 +19,7 @@ Shader "GPU/ExampleShader"
             };
 
             uniform float4x4 _ObjectToWorld;
+            uniform StructuredBuffer<float3> _positions;
 
             v2f vert(appdata_base v, uint svInstanceID : SV_InstanceID)
             {
@@ -26,9 +27,9 @@ Shader "GPU/ExampleShader"
                 v2f o;
                 uint cmdID = GetCommandID(0);
                 uint instanceID = GetIndirectInstanceID(svInstanceID);
-                float4 wpos = mul(_ObjectToWorld, v.vertex + float4(instanceID, cmdID, 0, 0));
+                float4 wpos = mul(_ObjectToWorld, v.vertex + float4(_positions[instanceID][0], _positions[instanceID][1], _positions[instanceID][2], 0));
                 o.pos = mul(UNITY_MATRIX_VP, wpos);
-                o.color = float4(cmdID & 1 ? 0.0f : 1.0f, cmdID & 1 ? 1.0f : 0.0f, instanceID / float(GetIndirectInstanceCount()), 0.0f);
+                o.color = float4(0.f, instanceID / float(GetIndirectInstanceCount()), cmdID & 1 ? 1.0f : 0.0f, 0.3f);
                 return o;
             }
 
