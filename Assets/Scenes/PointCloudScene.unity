@@ -167,7 +167,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84ec8a3b0c853dd4a9936d02d2a148cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vertexFile: {fileID: 4900000, guid: 0b1424324308afd4b8e6863abb26d003, type: 3}
+  vertexFile: {fileID: 4900000, guid: 405221f7a9544db4b9c4b425a24fa975, type: 3}
   offset: {x: 0, y: 0, z: 0}
   scale: {x: 1, y: 1, z: 1}
   material: {fileID: 2100000, guid: 267cf9841b04e0b40b5c451336915cec, type: 2}
@@ -257,8 +257,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1832824685}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0.24045044, y: -0.3234833, z: 0.08534644, w: 0.9111851}
+  m_LocalPosition: {x: 293.25323, y: 290.44876, z: -382.826}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
