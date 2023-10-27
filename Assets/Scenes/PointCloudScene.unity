@@ -164,13 +164,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 789924653}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 84ec8a3b0c853dd4a9936d02d2a148cb, type: 3}
+  m_Script: {fileID: 11500000, guid: a73a4be4dceb7a24ba5e13df9e611a31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  vertexFile: {fileID: 4900000, guid: 405221f7a9544db4b9c4b425a24fa975, type: 3}
+  vertexFile: {fileID: 4900000, guid: 90087b94a99e950418f398e696efa2cf, type: 3}
   offset: {x: 0, y: 0, z: 0}
   scale: {x: 1, y: 1, z: 1}
-  material: {fileID: 2100000, guid: 267cf9841b04e0b40b5c451336915cec, type: 2}
+  material: {fileID: 2100000, guid: 18a2da59bfa521c4481cd454cab958c2, type: 2}
   mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &1832824685
 GameObject:
