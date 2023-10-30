@@ -220,7 +220,7 @@ Transform:
   m_GameObject: {fileID: 535819736}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.385, y: 0.1376, z: -0.2}
+  m_LocalPosition: {x: 232.9322, y: 326.868, z: 494.93488}
   m_LocalScale: {x: 0.06, y: 0.06, z: 0.06}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -5200,8 +5200,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.06568914, y: 0.9272254, z: -0.31326285, w: -0.19443388}
-  m_LocalPosition: {x: 0.28328627, y: 0.68417597, z: 0.60146654}
+  m_LocalRotation: {x: -0.26003808, y: 0.34311795, z: -0.09908901, w: -0.89712405}
+  m_LocalPosition: {x: 1191.0778, y: 449.01993, z: -53.708076}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5236,7 +5236,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6602607b03e36f743b5a84a0fa8ba465, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  offset: {x: 0.4, y: 0, z: 0.2}
+  offset: {x: 0, y: 0, z: 0}
   vertexFile: {fileID: 4900000, guid: 1366a42de63848649928ca4f0ce53b0b, type: 3}
   indexFile: {fileID: 4900000, guid: 0b0c27f1d3e45f441b43d2e396ece642, type: 3}
   material: {fileID: 2100000, guid: 1450ce8ebc1a135428651f3ad2f467dd, type: 2}
