@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 /// <summary>
 ///     Class for creating triangle-surface from data files.
@@ -317,13 +318,12 @@ public class TriangleSurface : MonoBehaviour
         // read data:
         ReadVertexData();
         ReadIndexData();
-
+        
         // set vertex and index arrays:
-        var newMesh = new Mesh
-        {
-            vertices = Vertices,
-            triangles = GenerateIndexArray()  // flatten index-data to single static array
-        };
+        var newMesh = new Mesh();
+        newMesh.indexFormat = IndexFormat.UInt32;
+        newMesh.vertices = Vertices;
+        newMesh.SetIndices(GenerateIndexArray(), MeshTopology.Triangles, 0);  // flatten index-data to single static array
 
         // mesh object requires internal normals and tangents:
         newMesh.RecalculateNormals();
