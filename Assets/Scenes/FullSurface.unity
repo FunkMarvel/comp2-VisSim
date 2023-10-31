@@ -160,7 +160,7 @@ MonoBehaviour:
   mass: 1
   radius: 1
   rollingResistance: 0
-  bounciness: 1
+  bounciness: 0.6
 --- !u!23 &535819739
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -220,7 +220,7 @@ Transform:
   m_GameObject: {fileID: 535819736}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 232.9322, y: 326.868, z: 494.93488}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.06, y: 0.06, z: 0.06}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -5173,7 +5173,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 1500
   field of view: 70.95671
   orthographic: 0
   orthographic size: 5
@@ -5200,8 +5200,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.26003808, y: 0.34311795, z: -0.09908901, w: -0.89712405}
-  m_LocalPosition: {x: 1191.0778, y: 449.01993, z: -53.708076}
+  m_LocalRotation: {x: -0.2992832, y: 0.4779535, z: -0.18044443, w: -0.805872}
+  m_LocalPosition: {x: 667.10767, y: 261.87576, z: -312.26053}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
