@@ -88,7 +88,7 @@ public class BallPhysics : MonoBehaviour
             {
                 _elapsedTimeSinceContact += Time.fixedDeltaTime;
                 // correct position to avoid clipping:
-                position = hit.Point + radius * hit.HitNormal;
+                position = 0.5f*(hit.Point + nextHit.Point) + radius * (hit.HitNormal + nextHit.HitNormal).normalized;
 
                 var parallelVelocity = Vector3.ProjectOnPlane(_velocity, hit.HitNormal);
                 var parallelUnit = parallelVelocity.normalized;
@@ -138,6 +138,6 @@ public class BallPhysics : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(_prevContact, 0.01f);
+        Gizmos.DrawSphere(_prevContact, 0.1f);
     }
 }
