@@ -2,7 +2,6 @@ using System;
 using System.Globalization;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public enum DataSet
 {
@@ -20,7 +19,7 @@ public class PointCloud : MonoBehaviour
     [SerializeField] private Vector3 scale = Vector3.one;
     
     private Vector3[] _vertices = {new Vector3(0,0,0), new Vector3(1, 1, 1)};
-    private Vector3 maxVec;
+    private Vector2 _minMaxVec;
     private ComputeBuffer _pointBuffer;
     private DataSet _dataSet = DataSet.Sampled;
     
@@ -32,7 +31,7 @@ public class PointCloud : MonoBehaviour
     private GraphicsBuffer.IndirectDrawIndexedArgs[] _commandData;
     private static readonly int ObjectToWorld = Shader.PropertyToID("_ObjectToWorld");
     private static readonly int PositionUniform = Shader.PropertyToID("_positions");
-    private static readonly int MaxVecUniform = Shader.PropertyToID("_maxVec");
+    private static readonly int HeightMinMaxUniform = Shader.PropertyToID("_minMaxHeight");
 
     private void SwitchButtonText()
     {
@@ -79,7 +78,7 @@ public class PointCloud : MonoBehaviour
         
         rp.matProps.SetMatrix(ObjectToWorld, uniformMat);
         rp.matProps.SetBuffer(PositionUniform, _pointBuffer);
-        rp.matProps.SetVector(MaxVecUniform, new Vector4(maxVec.x, maxVec.y, maxVec.z, 0f));
+        rp.matProps.SetVector(HeightMinMaxUniform, new Vector2(_minMaxVec.x, _minMaxVec.y));
         
         _commandData[0].indexCountPerInstance = mesh.GetIndexCount(0);
         _commandData[0].instanceCount = (uint)_vertices.Length;
@@ -168,20 +167,16 @@ public class PointCloud : MonoBehaviour
         
         if (vertices.Length < 1) return;
         
-        maxVec = vertices[0];
+        _minMaxVec =  new Vector2(vertices[0].y, vertices[0].y);
         foreach (var vertex in vertices)
         {
-            if (maxVec.x < vertex.x)
+            if (_minMaxVec.x > vertex.y)
             {
-                maxVec.x = vertex.x;
+                _minMaxVec.x = vertex.y;
             }
-            if (maxVec.y < vertex.y)
+            if (_minMaxVec.y < vertex.y)
             {
-                maxVec.y = vertex.y;
-            }
-            if (maxVec.z < vertex.z)
-            {
-                maxVec.z = vertex.z;
+                _minMaxVec.y = vertex.y;
             }
         }
     
