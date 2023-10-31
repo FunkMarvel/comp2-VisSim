@@ -1,16 +1,28 @@
 using System;
 using System.Globalization;
+using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
+
+public enum DataSet
+{
+    Sampled,
+    Averaged
+}
 
 public class PointCloud : MonoBehaviour
 {
-    [SerializeField] private TextAsset vertexFile;
+    [SerializeField] private TextAsset sampledPointData;
+    [SerializeField] private TextAsset averagedPointData;
+    [SerializeField] private TMP_Text buttonText;
+    
     [SerializeField] private Vector3 offset;
     [SerializeField] private Vector3 scale = Vector3.one;
     
     private Vector3[] _vertices = {new Vector3(0,0,0), new Vector3(1, 1, 1)};
     private Vector3 maxVec;
     private ComputeBuffer _pointBuffer;
+    private DataSet _dataSet = DataSet.Sampled;
     
     private const int CommandCount = 1;
     public Material material;
@@ -22,9 +34,30 @@ public class PointCloud : MonoBehaviour
     private static readonly int PositionUniform = Shader.PropertyToID("_positions");
     private static readonly int MaxVecUniform = Shader.PropertyToID("_maxVec");
 
+    private void SwitchButtonText()
+    {
+        buttonText.text = _dataSet switch
+        {
+            DataSet.Sampled => "Sampled",
+            DataSet.Averaged => "Averaged",
+            _ => "null"
+        };
+    }
+
     private void Start()
     {
-        ReadVertexData();
+        var vertexFile = _dataSet switch
+        {
+            DataSet.Sampled => sampledPointData,
+            DataSet.Averaged => averagedPointData,
+            _ => null
+        };
+
+        SwitchButtonText();
+
+        if (vertexFile == null) return;
+        
+        ReadVertexData(vertexFile);
         Debug.LogWarning(_vertices.Length);
         
         _commandBuf = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, CommandCount,
@@ -42,7 +75,7 @@ public class PointCloud : MonoBehaviour
             matProps = new MaterialPropertyBlock()
         };
         var uniformMat = Matrix4x4.identity;
-        uniformMat.SetTRS(-offset - 0.5f*maxVec, Quaternion.identity, scale);
+        uniformMat.SetTRS(-offset, Quaternion.identity, scale);
         
         rp.matProps.SetMatrix(ObjectToWorld, uniformMat);
         rp.matProps.SetBuffer(PositionUniform, _pointBuffer);
@@ -54,13 +87,42 @@ public class PointCloud : MonoBehaviour
         Graphics.RenderMeshIndirect(rp, mesh, _commandBuf, CommandCount);
     }
 
+    public void OnSwitchDataSet()
+    {
+        _dataSet = _dataSet switch
+        {
+            DataSet.Sampled => DataSet.Averaged,
+            DataSet.Averaged => DataSet.Sampled,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        
+        var vertexFile = _dataSet switch
+        {
+            DataSet.Sampled => sampledPointData,
+            DataSet.Averaged => averagedPointData,
+            _ => null
+        };
+
+        SwitchButtonText();
+
+        if (vertexFile == null) return;
+        
+        ReadVertexData(vertexFile);
+        
+        _commandBuf = new GraphicsBuffer(GraphicsBuffer.Target.IndirectArguments, CommandCount,
+            GraphicsBuffer.IndirectDrawIndexedArgs.size);
+        _commandData = new GraphicsBuffer.IndirectDrawIndexedArgs[CommandCount];
+        _pointBuffer = new ComputeBuffer(_vertices.Length, 4 * 3);
+        _pointBuffer.SetData(_vertices);
+    }
+
     private void OnDestroy()
     {
         _commandBuf?.Release();
         _commandBuf = null;
     }
 
-    private void ReadVertexData()
+    private void ReadVertexData(TextAsset vertexData)
     {
         // defines which characters to split file into lines on:
         var fileDelimiters = new[] { "\r\n", "\r", "\n" };
@@ -69,11 +131,11 @@ public class PointCloud : MonoBehaviour
         var lineDelimiters = new[] { '(',')',',' };
     
         // split file into array of non-empty lines:
-        var lines = vertexFile.text.Split(fileDelimiters, StringSplitOptions.RemoveEmptyEntries);
+        var lines = vertexData.text.Split(fileDelimiters, StringSplitOptions.RemoveEmptyEntries);
     
         if (lines.Length < 1)
         {
-            Debug.LogWarning($"{vertexFile.name} was empty!");
+            Debug.LogWarning($"{vertexData.name} was empty!");
             return;
         }
     
@@ -81,7 +143,7 @@ public class PointCloud : MonoBehaviour
     
         if (numVertices < 1)
         {
-            Debug.LogWarning($"{vertexFile.name} contains no vertex data!");
+            Debug.LogWarning($"{vertexData.name} contains no vertex data!");
             return;
         }
     
@@ -93,7 +155,7 @@ public class PointCloud : MonoBehaviour
             var elements = lines[i].Split(lineDelimiters, StringSplitOptions.RemoveEmptyEntries);
             if (elements.Length < 3)
             {
-                Debug.LogWarning($"{vertexFile.name} is missing data on line {i}");
+                Debug.LogWarning($"{vertexData.name} is missing data on line {i}");
                 continue;
             }
     
