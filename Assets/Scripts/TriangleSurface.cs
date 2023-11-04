@@ -23,11 +23,12 @@ using UnityEngine.Rendering;
 public class TriangleSurface : MonoBehaviour
 {
     // properties that are set in editor:
-    [SerializeField] private Vector3 offset; // object mesh offset for proper centering in world.
     [SerializeField] private TextAsset vertexFile; // reference to text-file with vertices.
     [SerializeField] private TextAsset indexFile; // reference to text-file with triangulation-data.
     [SerializeField] private Material material; // reference to Unity-material to color mesh with.
+    [SerializeField] [Min(1e-6f)] private float resolution = 5.0f;
     private TriangleData _currentTriangle; // for keeping track of ball.
+    private MeshBounds _bounds;
 
     // for checking if mesh has been generated.
     private bool _hasMesh;
@@ -55,24 +56,11 @@ public class TriangleSurface : MonoBehaviour
         _currentTriangle = Triangles[0];
     }
 
-    // /// <summary>
-    // ///     Draw debug lines in editor.
-    // /// </summary>
-    // private void OnDrawGizmos()
-    // {
-    //     if (!_hasMesh) // read in mesh data when game is not running.
-    //     {
-    //         ReadVertexData();
-    //         ReadIndexData();
-    //     }
-    //
-    //     foreach (var triangle in Triangles)
-    //     {
-    //         Gizmos.DrawLine(Vertices[triangle.Indices[0]], Vertices[triangle.Indices[1]]);
-    //         Gizmos.DrawLine(Vertices[triangle.Indices[2]], Vertices[triangle.Indices[1]]);
-    //         Gizmos.DrawLine(Vertices[triangle.Indices[0]], Vertices[triangle.Indices[2]]);
-    //     }
-    // }
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawSphere(new Vector3(_bounds.XMin, _bounds.YMax, _bounds.ZMin), 1f);
+    }
 
     /// <summary>
     ///     Project position onto surface along surface normal.
@@ -81,7 +69,20 @@ public class TriangleSurface : MonoBehaviour
     /// <returns>struct with contact point and hit normal. If hit normal is zero vector, then no hit was found.</returns>
     public Contact GetCollision(Vector3 position)
     {
-        while (true)
+        // exploit regularity of grid in xz-plane to hash to correct quad:
+        var quadsPerStrip = Mathf.FloorToInt(_bounds.Height / resolution);
+        var i = Mathf.FloorToInt((position.x - _bounds.XMin) / resolution);
+        var j = Mathf.FloorToInt((position.z - _bounds.ZMin) / resolution);
+        var triangleIdx = 2 * (j + i * quadsPerStrip);
+        
+        // ensure index within bounds.
+        triangleIdx = triangleIdx < 0 || triangleIdx > Triangles.Count - 1 ? 0 : triangleIdx; 
+
+        _currentTriangle = Triangles[triangleIdx];
+        // Debug.Log($"i = {i} | j = {j} | numY = {verticesPerStrip} | calc tri = {triangleIdx} | act tri = {_currentTriangle.index}");
+        
+        
+        while (true)  // search loop.
         {
             // get vertices of current triangle:
             Vector3 p = Vertices[_currentTriangle.Indices[0]],
@@ -98,6 +99,8 @@ public class TriangleSurface : MonoBehaviour
                 // correcting projected point to be closest point from position to surface:
                 var diffVec = hitPosition - position;
                 hitPosition = position + Vector3.Dot(diffVec, normal) * normal;
+                
+                // Debug.Log($"found tri = {_currentTriangle.index}");
 
                 return new Contact(hitPosition, normal);
             }
@@ -214,7 +217,7 @@ public class TriangleSurface : MonoBehaviour
         }
 
         var vertices = new Vector3[numVertices];
-
+        
         for (var i = 1; i <= numVertices; i++)
         {
             // split line and read coordinates:
@@ -232,8 +235,24 @@ public class TriangleSurface : MonoBehaviour
             );
         }
 
-        // center mesh in world-space
-        for (var i = 0; i < vertices.Length; i++) vertices[i] -= offset;
+        float xmax, ymax, zmax;
+        var xmin = xmax = vertices[0].x;
+        var ymin = ymax = vertices[0].y;
+        var zmin = zmax = vertices[0].z;
+
+        foreach (var vertex in vertices)
+        {
+            xmin = Mathf.Min(vertex.x, xmin);
+            xmax = Mathf.Max(vertex.x, xmax);
+            
+            ymin = Mathf.Min(vertex.y, ymin);
+            ymax = Mathf.Max(vertex.y, ymax);
+            
+            zmin = Mathf.Min(vertex.z, zmin);
+            zmax = Mathf.Max(vertex.z, zmax);
+        }
+
+        _bounds = new MeshBounds(xmin, xmax, ymin, ymax, zmin, zmax);
 
         Vertices = vertices;
     }
@@ -289,7 +308,8 @@ public class TriangleSurface : MonoBehaviour
                 int.Parse(elements[3]), // neighbour
                 int.Parse(elements[4]), // neighbour
                 int.Parse(elements[5]), // neighbour
-                GetNormalFromTri(p, q, r) // surface normal
+                GetNormalFromTri(p, q, r), // surface normal
+                i-1
             ));
         }
     }
