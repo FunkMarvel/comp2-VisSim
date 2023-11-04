@@ -17,9 +17,10 @@ using UnityEngine;
 /// </summary>
 public struct TriangleData
 {
-    public TriangleData(int v0, int v1, int v2, int triangle0, int triangle1, int triangle2, Vector3 surfaceNormal)
+    public TriangleData(int v0, int v1, int v2, int triangle0, int triangle1, int triangle2, Vector3 surfaceNormal, int index)
     {
         SurfaceNormal = surfaceNormal;
+        this.index = index;
         Indices = new[] { v0, v1, v2 };
         Neighbours = new[] { triangle0, triangle1, triangle2 };
     }
@@ -38,4 +39,6 @@ public struct TriangleData
     ///     Read-only unit normal vector of triangle;
     /// </summary>
     public Vector3 SurfaceNormal { get; }
+    
+    public int index { get; }
 }
