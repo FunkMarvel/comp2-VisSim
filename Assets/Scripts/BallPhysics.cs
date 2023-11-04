@@ -59,7 +59,7 @@ public class BallPhysics : MonoBehaviour
         if (!_hasSurfaceRef) Debug.LogWarning($"{gameObject.name} has no reference to surface!");
     }
 
-    /// <summary>
+    /// <summary>   
     ///     Physics update loop.
     /// </summary>
     private void FixedUpdate()
@@ -87,8 +87,6 @@ public class BallPhysics : MonoBehaviour
             if (dist <= radius) // check if actually colliding
             {
                 _elapsedTimeSinceContact += Time.fixedDeltaTime;
-                // correct position to avoid clipping:
-                position = 0.5f*(hit.Point + nextHit.Point) + radius * (hit.HitNormal + nextHit.HitNormal).normalized;
 
                 var parallelVelocity = Vector3.ProjectOnPlane(_velocity, hit.HitNormal);
                 var parallelUnit = parallelVelocity.normalized;
@@ -108,8 +106,9 @@ public class BallPhysics : MonoBehaviour
                 // add normal-force:
                 var normalForceMagnitude = Vector3.Dot(netForce, hit.HitNormal);
                 netForce -= (hit.HitNormal - rollingCoefficient * parallelUnit) * normalForceMagnitude;
+                transform1.position = 0.5f*(hit.Point + nextHit.Point) + radius * reflectNorm;
             }
-            Debug.Log($"Normal: {hit.HitNormal}");
+            // Debug.Log($"Normal: {hit.HitNormal}");
 
             // remove physics-script from ball if out of bounds:
             if (!_outOfBounds && Mathf.Approximately(hit.HitNormal.sqrMagnitude, 0f))
@@ -117,19 +116,19 @@ public class BallPhysics : MonoBehaviour
                 _outOfBounds = true;
                 Destroy(this);
             }
+            
+            // integrate position with Forward-Euler:
+            var acceleration = netForce / mass;
+            _velocity += acceleration * Time.fixedDeltaTime;
+
+            transform1.Translate(_velocity * Time.fixedDeltaTime);
+
+            // log position:
+            // Debug.Log($"Position: {position} | " +
+            //           $"Velocity {_velocity.magnitude:F4} | " +
+            //           $"Acceleration {acceleration.magnitude:F4} | " +
+            //           $"Time since contact {_elapsedTimeSinceContact:F4}");
         }
-
-        // integrate position with Forward-Euler:
-        var acceleration = netForce / mass;
-        _velocity += acceleration * Time.fixedDeltaTime;
-
-        transform1.Translate(_velocity * Time.fixedDeltaTime);
-
-        // log position:
-        Debug.Log($"Position: {position} | " +
-                  $"Velocity {_velocity.magnitude:F4} | " +
-                  $"Acceleration {acceleration.magnitude:F4} | " +
-                  $"Time since contact {_elapsedTimeSinceContact:F4}");
     }
 
     /// <summary>
