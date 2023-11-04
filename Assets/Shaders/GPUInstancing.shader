@@ -29,7 +29,7 @@ Shader "GPU/PointCloudShader"
                 v2f o;
 
                 const uint instanceID = GetIndirectInstanceID(svInstanceID);
-
+                
                 const float4 wpos = mul(_ObjectToWorld, v.vertex + float4(_positions[instanceID][0], _positions[instanceID][1], _positions[instanceID][2], 0));
                 o.pos = mul(UNITY_MATRIX_VP, wpos);
 
